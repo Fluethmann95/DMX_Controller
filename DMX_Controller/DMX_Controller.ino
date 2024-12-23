@@ -35,7 +35,6 @@ void setup() {
 void loop() {
   CheckButton();
   Rotary.Process(millis());
-  DMXUpdate();
   checkBacklight();
 }
 
@@ -114,16 +113,19 @@ void SingleTap() {
   }
 
   updatedisplay();
+  DMXUpdate();
 }
 
 void DoubleTap() {
   //Double Tap hat keine weitere Funktion
   updatedisplay();
+  DMXUpdate();
 }
 
 void LongPress() {
   eepromUpdate();
   updatedisplay();
+  DMXUpdate();
 }
 
 void eepromUpdate() {
@@ -153,10 +155,12 @@ void rotarysetup() {
 void OnButtonLeft(void) {
   encodervalue--;
   updatedisplay();
+  DMXUpdate();
 }
 void OnButtonRight(void) {
   encodervalue++;
   updatedisplay();
+  DMXUpdate();
 }
 
 void CheckButton() {
