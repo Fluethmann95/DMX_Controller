@@ -5,7 +5,7 @@
 #include <PushButtonTaps.h>
 #include "KY040rotary.h"
 
-LiquidCrystal_I2C lcd(0x27, 20, 4);  // set the LCD address to 0x27 for a 16 chars and 2 line display
+LiquidCrystal_I2C lcd(0x27, 20, 4);  //LCD Address 0x27
 KY040 Rotary(4, 5, 2);               //ck, dt, sw
 
 const int BUTTON_PIN = 2;
@@ -17,7 +17,7 @@ bool state = false;
 int selectedvalue = 1;
 int encodervalue = 1;
 
-long backlightsettime = 10000;
+long backlightsettime = 20000;
 long backlightlasttime = 0;
 
 void setup() {
@@ -27,8 +27,8 @@ void setup() {
   rotarysetup();
   eepromload();
   updatedisplay();
-
   resetBacklightTimer();
+  DMXUpdate();
 }
 
 
