@@ -3,12 +3,15 @@
 #include <Wire.h>
 #include <LiquidCrystal_I2C.h>
 #include <PushButtonTaps.h>
-#include "KY040rotary.h"
+#include <KY040.h>
 
 LiquidCrystal_I2C lcd(0x27, 20, 4);  //LCD Address 0x27
-KY040 Rotary(4, 5, 2);               //ck, dt, sw
+// Rotary encoder
+#define CLK_PIN 2  // aka. A
+#define DT_PIN 3   // aka. B
+KY040 g_rotaryEncoder(CLK_PIN, DT_PIN);
 
-const int BUTTON_PIN = 2;
+const int BUTTON_PIN = 4;
 PushButtonTaps pushBtn;
 
 byte dmxvalues[512];
@@ -16,15 +19,32 @@ byte dmxvalues[512];
 bool state = false;
 int selectedvalue = 1;
 int encodervalue = 1;
+int encodervalueold = 1;
 
 long backlightsettime = 20000;
 long backlightlasttime = 0;
 
+// ISR to handle the interrupts for CLK and DT
+void ISR_rotaryEncoder() {
+  // Process pin states for CLK and DT
+  switch (g_rotaryEncoder.getRotation()) {
+    case KY040::CLOCKWISE:
+      //OnButtonRight();
+      encodervalue++;
+      break;
+    case KY040::COUNTERCLOCKWISE:
+      // OnButtonLeft();
+      encodervalue--;
+      break;
+  }
+}
+
 void setup() {
-  DMXSerial.init(DMXController);
+
+  rotarysetup();
+  DMXSerial.init(DMXController, 5);
   pushBtn.setButtonPin(BUTTON_PIN);
   lcdsetup();
-  rotarysetup();
   eepromload();
   updatedisplay();
   resetBacklightTimer();
@@ -34,8 +54,13 @@ void setup() {
 
 void loop() {
   CheckButton();
-  Rotary.Process(millis());
   checkBacklight();
+
+  if (encodervalue != encodervalueold) {
+    updatedisplay();
+    DMXUpdate();
+    encodervalueold = encodervalue;
+  }
 }
 
 void homeview() {
@@ -147,20 +172,9 @@ void updatedisplay() {
 }
 
 void rotarysetup() {
-  Rotary.Begin();
-  Rotary.OnButtonLeft(OnButtonLeft);
-  Rotary.OnButtonRight(OnButtonRight);
-}
-
-void OnButtonLeft(void) {
-  encodervalue--;
-  updatedisplay();
-  DMXUpdate();
-}
-void OnButtonRight(void) {
-  encodervalue++;
-  updatedisplay();
-  DMXUpdate();
+  // Set interrupts for CLK and DT
+  attachInterrupt(digitalPinToInterrupt(CLK_PIN), ISR_rotaryEncoder, CHANGE);
+  attachInterrupt(digitalPinToInterrupt(DT_PIN), ISR_rotaryEncoder, CHANGE);
 }
 
 void CheckButton() {
